@@ -21,7 +21,7 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .requestMatchers(HttpMethod.GET, "/profiles").permitAll()
                 .requestMatchers(HttpMethod.GET, "/profiles/**").permitAll()
-                .requestMatchers(HttpMethod.PATCH, "/profiles/me").authenticated()
+                .requestMatchers("/internal/**").permitAll()
                 .anyRequest().denyAll());
         http.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
         return http.build();

@@ -41,9 +41,9 @@ Spring Boot **사용자 프로필 REST API**다. 표시용 닉네임 등을 Post
 
 | 경로 | 역할 |
 | --- | --- |
-| `controller/` | `ProfileController` |
-| `service/` | 프로필 조회·수정 로직 (`UserProfileService`) |
-| `dto/profile/` | `ProfileResponse`, `PatchProfileRequest` |
+| `controller/` | `ProfileController`, `InternalProfileController` |
+| `service/` | 프로필 조회·생성 로직 (`UserProfileService`) |
+| `dto/profile/` | `ProfileResponse`, `CreateUserProfileRequest` |
 | `db/domain/` | JPA 엔티티 `UserProfile` |
 | `db/repository/` | `UserProfileRepository` |
 | `security/` | `JwtConfig` |
@@ -62,10 +62,10 @@ Spring Boot **사용자 프로필 REST API**다. 표시용 닉네임 등을 Post
   1. `GET /actuator/health`, `GET /actuator/info` → 허용.
   2. `GET /profiles` → 허용(배치 조회는 쿼리 `ids` 필요, 아래 엔드포인트 참고).
   3. `GET /profiles/**` → 허용.
-  4. `PATCH /profiles/me` → 인증 필요(유효 JWT). `sub` 을 숫자 `userId` 로 파싱한다.
+  4. `/internal/**` → 허용(auth 등 **클러스터 내부** 서비스 간 호출). ingress 에 `/internal` 을 붙이지 않는다.
   5. 그 외 → **접근 거부** (`denyAll`).
 
-**토큰 검증 시점에 쓰는 클레임(다른 서비스에서 맞출 때):** HS256, `sub` 는 **숫자 문자열**(사용자 ID). `PATCH /profiles/me` 는 본인 `userId` 와 `sub` 가 일치해야 한다.
+**토큰 검증 시점에 쓰는 클레임(다른 서비스에서 맞출 때):** HS256, `sub` 는 **숫자 문자열**(사용자 ID). 인증이 필요한 엔드포인트를 추가할 때 발급 쪽과 맞춘다.
 
 ### 엔드포인트
 
@@ -73,7 +73,8 @@ Spring Boot **사용자 프로필 REST API**다. 표시용 닉네임 등을 Post
 | --- | --- | --- | --- |
 | GET | `/profiles?ids=` | 불필요 | 콤마 구분 정수 목록. **요청 순서·중복 id 유지**, DB에 없는 id는 응답에서 생략. `ids` 비어 있음 → `[]`. 잘못된 형식 → **400**. `ids` 없이 `GET /profiles` 만 호출하면 매칭되는 핸들러가 없어 **거부**된다. |
 | GET | `/profiles/{userId}` | 불필요 | 단건 `ProfileResponse`. 없으면 **404**. |
-| PATCH | `/profiles/me` | 필요 | 본인 닉네임 수정. 프로필 없으면 생성(기본 닉네임 `user-{userId}`). |
+| POST | `/internal/profiles` | 불필요(내부) | 프로필 생성. auth 가입 시 `profile-svc` 직접 호출. |
+| GET | `/internal/profiles/exists` | 불필요(내부) | 닉네임 중복 여부 (`?nickname=`). |
 | GET | `/actuator/health`, `/actuator/info` | 불필요 | Actuator |
 
 JSON 은 camelCase 다.
@@ -81,7 +82,7 @@ JSON 은 camelCase 다.
 ### 응답·요청 필드 요약
 
 - **ProfileResponse:** `userId`, `nickname`
-- **PatchProfileRequest (`PATCH /profiles/me`):** `nickname` (선택, 최대 64자). `null` 이면 닉네임 변경 없음.
+- **CreateUserProfileRequest (`POST /internal/profiles`):** `userId`, `nickname` (auth 가입 시 내부 호출)
 
 배치 조회 응답은 `ProfileResponse` 의 **JSON 배열**이다.
 

@@ -2,7 +2,7 @@ package com.oinkvalley.user_profile_svc.service;
 
 import com.oinkvalley.user_profile_svc.db.domain.UserProfile;
 import com.oinkvalley.user_profile_svc.db.repository.UserProfileRepository;
-import com.oinkvalley.user_profile_svc.dto.profile.PatchProfileRequest;
+import com.oinkvalley.user_profile_svc.dto.profile.CreateUserProfileRequest;
 import com.oinkvalley.user_profile_svc.dto.profile.ProfileResponse;
 import java.util.Arrays;
 import java.util.List;
@@ -55,14 +55,9 @@ public class UserProfileService {
         return toPublicResponse(profile);
     }
 
-    @Transactional
-    public ProfileResponse patchMe(long userId, PatchProfileRequest patch) {
-        UserProfile profile = repository.findById(userId).orElseGet(() -> newProfile(userId));
-        if (patch.nickname() != null) {
-            profile.setNickname(patch.nickname());
-        }
-        repository.save(profile);
-        return toPublicResponse(profile);
+    @Transactional(readOnly = true)
+    public boolean existsNickname(String nickname) {
+        return repository.existsByNickname(nickname.trim());
     }
 
     private static List<Long> parseIds(String idsParam) {
@@ -80,8 +75,17 @@ public class UserProfileService {
         }
     }
 
-    private static UserProfile newProfile(long userId) {
-        return new UserProfile(userId, "user-" + userId);
+    @Transactional
+    public void createProfile(CreateUserProfileRequest request) {
+        if (repository.existsById(request.userId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User profile already exists");
+        }   
+        try {
+            UserProfile profile = new UserProfile(request.userId(), request.nickname().trim());
+            repository.save(profile);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create user profile", e);
+        }
     }
 
     private static ProfileResponse toPublicResponse(UserProfile p) {
