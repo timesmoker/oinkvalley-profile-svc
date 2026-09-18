@@ -3,14 +3,15 @@
 FROM gradle:9.4.1-jdk21-jammy AS builder
 WORKDIR /workspace
 ARG GITHUB_ACTOR
-ARG GITHUB_TOKEN
-ENV GITHUB_ACTOR=$GITHUB_ACTOR GITHUB_TOKEN=$GITHUB_TOKEN
 
 COPY build.gradle settings.gradle gradle.properties ./
 COPY gradle ./gradle
 COPY src ./src
 
-RUN GRADLE_USER_HOME=/tmp/gradle GRADLE_OPTS="-Xmx512m -XX:MaxMetaspaceSize=256m" gradle --no-daemon bootJar
+RUN --mount=type=secret,id=github_token \
+    export GITHUB_TOKEN="$(cat /run/secrets/github_token)" \
+    && GRADLE_USER_HOME=/tmp/gradle GRADLE_OPTS="-Xmx512m -XX:MaxMetaspaceSize=256m" \
+       gradle --no-daemon bootJar
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
