@@ -6,6 +6,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 
@@ -19,6 +20,8 @@ public class JwtConfig {
             throw new IllegalArgumentException("jwt.secret must be at least 32 bytes (UTF-8)");
         }
         SecretKey secretKey = new SecretKeySpec(keyBytes, "HmacSHA256");
-        return NimbusJwtDecoder.withSecretKey(secretKey).build();
+        return NimbusJwtDecoder.withSecretKey(secretKey)
+                .macAlgorithm(MacAlgorithm.HS256)
+                .build();
     }
 }
