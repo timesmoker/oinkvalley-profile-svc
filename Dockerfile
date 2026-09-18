@@ -2,6 +2,9 @@
 # 빌드: Gradle 공식 이미지 (Alpine 은 일부 환경에서 플러그인 저장소 DNS/SSL 이슈가 있어 Jammy 기반 사용)
 FROM gradle:9.4.1-jdk21-jammy AS builder
 WORKDIR /workspace
+ARG GITHUB_ACTOR
+ARG GITHUB_TOKEN
+ENV GITHUB_ACTOR=$GITHUB_ACTOR GITHUB_TOKEN=$GITHUB_TOKEN
 
 COPY build.gradle settings.gradle gradle.properties ./
 COPY gradle ./gradle
@@ -18,6 +21,7 @@ COPY --from=builder /workspace/build/libs/*.jar app.jar
 
 USER spring:spring
 EXPOSE 8082
+EXPOSE 9090
 
 ENV JAVA_OPTS=""
 ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/app.jar"]
