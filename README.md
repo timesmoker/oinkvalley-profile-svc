@@ -2,7 +2,7 @@
 
 Spring Boot **사용자 프로필 REST API**다. 표시용 닉네임 등을 PostgreSQL에 두고, **JWT(HS256)** 로 상태 없이 인증한다. 클라이언트는 **Authorization: Bearer <token>** 만내며, 쿠키에 실린 토큰은 이 서비스에서 직접 읽지 않는다.
 
-의존성·JDK·Gradle 버전 요약은 **[DEPENDENCIES.md](DEPENDENCIES.md)** 를 본다.
+의존성·JDK·플러그인 버전은 **[build.gradle](build.gradle)** 을 본다.
 
 **단일 진실 소스(SOT):** 배포·운영에서 쓰는 값의 기준은 **무조건 `infra` 폴더**(Helm values, 매니페스트, 환경 변수 정의 등)에 있다. 이 저장소의 `application.properties` 와 여기 문서는 편의·개발용 설명이며, 충돌하면 **`infra` 쪽이 정답이다.**
 
@@ -90,4 +90,4 @@ JSON 은 camelCase 다.
 
 테이블 **`user_profiles`:** `user_id`(PK), `nickname`, `bio`, `locale`. `bio`·`locale` 은 엔티티에만 있고 **현재 REST JSON에는 포함하지 않는다**.
 
-스키마 생성·변경은 `spring.jpa.hibernate.ddl-auto` (`SPRING_JPA_HIBERNATE_DDL_AUTO`) 정책에 따라 Hibernate 가 관리한다.
+스키마 생성·변경은 **`oinkvalley-db/migrations`** (SOT). JPA는 `SPRING_JPA_HIBERNATE_DDL_AUTO=validate` 로 엔티티와 DB 일치만 검증한다.
