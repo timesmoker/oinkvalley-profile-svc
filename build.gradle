@@ -15,6 +15,7 @@ java {
 
 repositories {
     mavenCentral()
+    mavenLocal()
     maven {
         url = uri('https://maven.pkg.github.com/timesmoker/oinkvalley-protos')
         credentials {
@@ -22,7 +23,6 @@ repositories {
             password = System.getenv('GITHUB_TOKEN') ?: ''
         }
     }
-    mavenLocal()
 }
 
 dependencies {
@@ -32,7 +32,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-grpc-server'
-    implementation 'com.oinkvalley.protos:profile-v1:1.0.0'
+    implementation 'com.oinkvalley.protos:profile-v1:1.1.0'
     implementation 'org.jspecify:jspecify:1.0.0'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

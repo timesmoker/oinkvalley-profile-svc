@@ -3,6 +3,7 @@
 FROM gradle:9.4.1-jdk21-jammy AS builder
 WORKDIR /workspace
 ARG GITHUB_ACTOR
+ENV GITHUB_ACTOR=$GITHUB_ACTOR
 
 COPY build.gradle settings.gradle gradle.properties ./
 COPY gradle ./gradle

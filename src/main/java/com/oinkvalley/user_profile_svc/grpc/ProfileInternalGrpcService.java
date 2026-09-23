@@ -1,10 +1,13 @@
 package com.oinkvalley.user_profile_svc.grpc;
 
+import com.oinkvalley.profile.v1.BatchGetProfileNicknamesRequest;
+import com.oinkvalley.profile.v1.BatchGetProfileNicknamesResponse;
 import com.oinkvalley.profile.v1.CreateProfileRequest;
 import com.oinkvalley.profile.v1.CreateProfileResponse;
 import com.oinkvalley.profile.v1.ExistsNicknameRequest;
 import com.oinkvalley.profile.v1.ExistsNicknameResponse;
 import com.oinkvalley.profile.v1.ProfileInternalServiceGrpc;
+import com.oinkvalley.profile.v1.ProfileNickname;
 import com.oinkvalley.user_profile_svc.dto.profile.CreateUserProfileRequest;
 import com.oinkvalley.user_profile_svc.service.UserProfileService;
 import io.grpc.Status;
@@ -30,6 +33,26 @@ public class ProfileInternalGrpcService extends ProfileInternalServiceGrpc.Profi
 			responseObserver.onCompleted();
 		} catch (ResponseStatusException e) {
 			responseObserver.onError(toGrpcStatus(e).withDescription(e.getReason()).asRuntimeException());
+		} catch (Exception e) {
+			responseObserver.onError(
+					Status.INTERNAL.withDescription(e.getMessage()).withCause(e).asRuntimeException());
+		}
+	}
+
+	@Override
+	public void batchGetProfileNicknames(
+			BatchGetProfileNicknamesRequest request,
+			StreamObserver<BatchGetProfileNicknamesResponse> responseObserver) {
+		try {
+			var profiles = userProfileService.findByIdsPreserveOrder(request.getUserIdsList()).stream()
+					.map(profile -> ProfileNickname.newBuilder()
+							.setUserId(profile.userId())
+							.setNickname(profile.nickname())
+							.build())
+					.toList();
+			responseObserver.onNext(
+					BatchGetProfileNicknamesResponse.newBuilder().addAllProfiles(profiles).build());
+			responseObserver.onCompleted();
 		} catch (Exception e) {
 			responseObserver.onError(
 					Status.INTERNAL.withDescription(e.getMessage()).withCause(e).asRuntimeException());
